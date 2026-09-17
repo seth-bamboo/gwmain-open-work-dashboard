@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GWMAIN Open Work — All Tracks &amp; Prod Defects</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F6F3; --panel: #FFFFFF; --line: #DCDFD9; --ink: #1C2321; --ink-soft: #5B655F;
+    --slate: #2B4C5C; --slate-soft: #E7EEF0; --brick: #B23A2E; --brick-soft: #F6E4E1;
+    --moss: #3F6B4F; --moss-soft: #E4EEE7; --amber: #9C6B14; --amber-soft: #F3E9D4;
+    --plum: #6B4C7A; --plum-soft: #EEE6F1;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans',-apple-system,sans-serif; line-height:1.45; }
+  a { color:var(--slate); text-decoration:none; border-bottom:1px solid transparent; }
+  a:hover { border-bottom-color:var(--slate); }
+  .wrap { max-width:1180px; margin:0 auto; padding:36px 28px 80px; }
+  header.board-head { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; border-bottom:2px solid var(--ink); padding-bottom:18px; margin-bottom:28px; flex-wrap:wrap; }
+  header.board-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em; }
+  header.board-head .sub { color:var(--ink-soft); font-size:14px; max-width:65ch; }
+  header.board-head .meta { text-align:right; font-size:13px; color:var(--ink-soft); }
+  .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--line); border:1px solid var(--line); margin-bottom:32px; }
+  .stat { background:var(--panel); padding:18px 16px; display:flex; flex-direction:column; gap:4px; }
+  .stat .num { font-size:28px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .stat .label { font-size:12.5px; color:var(--ink-soft); }
+  .stat.alert .num { color:var(--brick); } .stat.warn .num { color:var(--amber); }
+  .stat a { font-size:12px; }
+  .grid-2 { display:grid; grid-template-columns:1.1fr 1fr; gap:24px; margin-bottom:32px; align-items:start; }
+  section.panel { background:var(--panel); border:1px solid var(--line); }
+  .panel-head { display:flex; justify-content:space-between; align-items:baseline; padding:16px 18px 12px; border-bottom:1px solid var(--line); }
+  .panel-head h2 { font-size:16px; font-weight:600; margin:0; }
+  .panel-head .view-all { font-size:12.5px; }
+  .panel-body { padding:16px 18px 20px; }
+  .funnel-row { display:grid; grid-template-columns:170px 1fr 50px; align-items:center; gap:10px; padding:6px 0; }
+  .funnel-label { font-size:13px; color:var(--ink); border-bottom:none; }
+  .funnel-label:hover { color:var(--slate); }
+  .funnel-track { background:var(--slate-soft); height:9px; }
+  .funnel-fill { background:var(--slate); height:100%; }
+  .funnel-count { font-size:12.5px; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-soft); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; font-weight:600; font-size:11.5px; color:var(--ink-soft); padding:7px 9px; border-bottom:1px solid var(--line); }
+  td { padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  .name-cell { font-weight:500; white-space:nowrap; }
+  .num-cell { text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
+  .link-cell { text-align:right; }
+  .key-cell { font-family:'IBM Plex Mono',monospace; font-size:12px; white-space:nowrap; }
+  .role-tag { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:500; padding:1px 6px; margin-left:4px; }
+  .role-dev { background:var(--slate-soft); color:var(--slate); }
+  .role-qa { background:var(--plum-soft); color:var(--plum); }
+  .role-ba { background:var(--moss-soft); color:var(--moss); }
+  .role-sa { background:var(--amber-soft); color:var(--amber); }
+  .role-fix { background:var(--brick-soft); color:var(--brick); }
+  .role-unk { background:#EFEFEC; color:var(--ink-soft); }
+  .status-pill { display:inline-block; padding:2px 7px; font-size:11.5px; font-weight:500; background:var(--slate-soft); color:var(--slate); white-space:nowrap; }
+  section.full { margin-bottom:32px; }
+  .track-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; padding:16px 18px; }
+  .track-card { border:1px solid var(--line); }
+  .track-head { display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-bottom:1px solid var(--line); background:#FAFAF8; }
+  .track-name { font-weight:600; font-size:13.5px; }
+  .track-stats { font-size:11.5px; color:var(--ink-soft); }
+  .track-card table { font-size:12px; }
+  .track-card td, .track-card th { padding:5px 8px; }
+  footer.board-foot { border-top:1px solid var(--line); padding-top:18px; font-size:13px; color:var(--ink-soft); }
+  footer.board-foot a { font-weight:600; }
+  .small-note { font-size:12px; color:var(--ink-soft); padding:10px 18px 4px; margin:0; }
+  @media (max-width:1000px) { .stats{grid-template-columns:repeat(2,1fr);} .grid-2{grid-template-columns:1fr;} .track-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="board-head">
+    <div>
+      <h1>GWMAIN Open Work — All Tracks &amp; Prod Defects</h1>
+      <div class="sub">Every open GWMAIN ticket that carries a fix version — spans R4.9.1 through R4.10.4 and beyond, across PolicyCenter, BillingCenter, Digital, Integration, GhostDraft, QAA and more. Effort is a priority-weighted proxy (Critical=4, High=2, Medium=1, Low=0.5), not logged hours.</div>
+    </div>
+    <div class="meta">
+      Snapshot: Sept 17, 2026<br>
+      <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">Open full filter in Jira</a>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="num">836</div><div class="label">Open tickets w/ fix version</div><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">view</a></div>
+    <div class="stat warn"><div class="num">215</div><div class="label">Critical priority</div></div>
+    <div class="stat alert"><div class="num">145</div><div class="label">Flagged Prod Defects</div><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20%28issuetype%20%3D%20%22Production%20Defect%22%20OR%20summary%20~%20%22%5C%22Prod%20Defect%5C%22%22%29%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">view</a></div>
+    <div class="stat"><div class="num">131</div><div class="label">Unassigned</div><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20assignee%20is%20EMPTY%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">view</a></div>
+    <div class="stat"><div class="num">26</div><div class="label">Critical Epics (initiatives)</div></div>
+  </div>
+
+  <div class="grid-2">
+    <section class="panel">
+      <div class="panel-head"><h2>Hot topics — by weighted effort</h2><span class="view-all">component</span></div>
+      <div class="panel-body">
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22PolicyCenter%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">PolicyCenter</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:100%"></div></div>
+          <span class="funnel-count">719</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22BillingCenter%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">BillingCenter</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:91%"></div></div>
+          <span class="funnel-count">655</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22New%20Business%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">New Business</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:45%"></div></div>
+          <span class="funnel-count">327</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22Digital%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">Digital</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:43%"></div></div>
+          <span class="funnel-count">310</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22GhostDraft%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">GhostDraft</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:29%"></div></div>
+          <span class="funnel-count">208</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22Renewal%20Transaction%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">Renewal Transaction</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:26%"></div></div>
+          <span class="funnel-count">187</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22Integration%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">Integration</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:25%"></div></div>
+          <span class="funnel-count">182</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22Forms%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">Forms</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:22%"></div></div>
+          <span class="funnel-count">156</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22Renewal%20Notice%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">Renewal Notice</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:19%"></div></div>
+          <span class="funnel-count">140</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22BillingCenter%20Tiger%20Team%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">BillingCenter Tiger Team</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:18%"></div></div>
+          <span class="funnel-count">130</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22Document%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">Document</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:18%"></div></div>
+          <span class="funnel-count">129</span>
+        </div>
+        <div class="funnel-row">
+          <a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20component%20%3D%20%22Rating%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener" class="funnel-label">Rating</a>
+          <div class="funnel-track"><div class="funnel-fill" style="width:17%"></div></div>
+          <span class="funnel-count">119</span>
+        </div></div>
+      <p class="small-note">Weight = priority-weighted ticket volume in that component, summed across every open ticket touching it (tickets can touch multiple components).</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>MBR regulatory program</h2><span class="view-all">summary contains "MBR-0x"</span></div>
+      <div class="panel-body" style="padding:0 18px 4px;">
+        <table>
+          <thead><tr><th>Phase</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th><th>Driving it</th><th></th></tr></thead>
+          <tbody>
+        <tr>
+          <td class="key-cell">MBR-01</td>
+          <td class="num-cell">5</td>
+          <td class="num-cell">14</td>
+          <td>Melissa Knighton (3), Lori Brewer (2)</td>
+          <td class="link-cell"><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20summary%20~%20%22MBR-01%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">open</a></td>
+        </tr>
+        <tr>
+          <td class="key-cell">MBR-02</td>
+          <td class="num-cell">11</td>
+          <td class="num-cell">38</td>
+          <td>David Poplaski (11)</td>
+          <td class="link-cell"><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20summary%20~%20%22MBR-02%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">open</a></td>
+        </tr>
+        <tr>
+          <td class="key-cell">MBR-03</td>
+          <td class="num-cell">11</td>
+          <td class="num-cell">36</td>
+          <td>Unassigned (6), Yuvraj Sambhaji (2), Ligi (1)</td>
+          <td class="link-cell"><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20summary%20~%20%22MBR-03%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">open</a></td>
+        </tr>
+        <tr>
+          <td class="key-cell">MBR-04</td>
+          <td class="num-cell">24</td>
+          <td class="num-cell">74</td>
+          <td>Unassigned (5), Sathya Ramamoorthy (3), Adam Riese (3)</td>
+          <td class="link-cell"><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20summary%20~%20%22MBR-04%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">open</a></td>
+        </tr>
+        <tr>
+          <td class="key-cell">MBR-05</td>
+          <td class="num-cell">4</td>
+          <td class="num-cell">14</td>
+          <td>Chris Irvine (4)</td>
+          <td class="link-cell"><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20summary%20~%20%22MBR-05%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">open</a></td>
+        </tr>
+        <tr>
+          <td class="key-cell">MBR-06</td>
+          <td class="num-cell">20</td>
+          <td class="num-cell">33</td>
+          <td>Darshan.Shetty (4), Yaswanth Nagaraj (4), John Dawdy (2)</td>
+          <td class="link-cell"><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20summary%20~%20%22MBR-06%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">open</a></td>
+        </tr>
+        <tr>
+          <td class="key-cell">MBR-07</td>
+          <td class="num-cell">3</td>
+          <td class="num-cell">6</td>
+          <td>Audwin (1), Unassigned (1), Chris Irvine (1)</td>
+          <td class="link-cell"><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20summary%20~%20%22MBR-07%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">open</a></td>
+        </tr>
+        <tr>
+          <td class="key-cell">MBR-08</td>
+          <td class="num-cell">1</td>
+          <td class="num-cell">2</td>
+          <td>Duc Nguyen (1)</td>
+          <td class="link-cell"><a href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20summary%20~%20%22MBR-08%22%20ORDER%20BY%20priority%20DESC" target="_blank" rel="noopener">open</a></td>
+        </tr></tbody>
+        </table>
+      </div>
+      <p class="small-note">79 tickets (9% of all open work) carry an "MBR-0x" tag — a cross-track regulatory initiative touching PolicyCenter, BillingCenter and GhostDraft. MBR-04 and MBR-06 are the biggest and least-owned right now.</p>
+    </section>
+  </div>
+
+  <section class="panel full">
+    <div class="panel-head"><h2>By track — who's carrying what</h2><span class="view-all">from the 2026 Scrum Teams roster</span></div>
+    <div class="track-grid">
+      
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-name">BillingCenter</span>
+        <span class="track-stats">111 tickets &middot; weight 257 &middot; 35 prod defects</span>
+      </div>
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">GRESHMA MATHEW <span class="role-tag role-qa">QA</span></td><td class="num-cell">40</td><td class="num-cell">92</td></tr><tr><td class="name-cell">Maher Jellali <span class="role-tag role-dev">DEV</span></td><td class="num-cell">24</td><td class="num-cell">55</td></tr><tr><td class="name-cell">Cory Bryck <span class="role-tag role-qa">QA</span></td><td class="num-cell">8</td><td class="num-cell">28</td></tr><tr><td class="name-cell">Igor Poteriaiko <span class="role-tag role-dev">DEV LEAD</span></td><td class="num-cell">7</td><td class="num-cell">23</td></tr><tr><td class="name-cell">Vijayapandi A <span class="role-tag role-qa">QA</span></td><td class="num-cell">13</td><td class="num-cell">20</td></tr></tbody>
+      </table>
+    </div>
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-name">PolicyCenter</span>
+        <span class="track-stats">123 tickets &middot; weight 254 &middot; 29 prod defects</span>
+      </div>
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">Sabarishwaran Kannan <span class="role-tag role-qa">QA</span></td><td class="num-cell">32</td><td class="num-cell">67</td></tr><tr><td class="name-cell">Yaswanth Nagaraj <span class="role-tag role-qa">QA</span></td><td class="num-cell">28</td><td class="num-cell">59</td></tr><tr><td class="name-cell">Premkumar K <span class="role-tag role-qa">QA</span></td><td class="num-cell">18</td><td class="num-cell">27</td></tr><tr><td class="name-cell">phaneendra atmakuru <span class="role-tag role-dev">DEV</span></td><td class="num-cell">7</td><td class="num-cell">24</td></tr><tr><td class="name-cell">Prashanth K V <span class="role-tag role-dev">DEV</span></td><td class="num-cell">7</td><td class="num-cell">16</td></tr></tbody>
+      </table>
+    </div>
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-name">Integration</span>
+        <span class="track-stats">124 tickets &middot; weight 247 &middot; 10 prod defects</span>
+      </div>
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">Saravanakumar Muthukrishnan <span class="role-tag role-qa">QA</span></td><td class="num-cell">29</td><td class="num-cell">55</td></tr><tr><td class="name-cell">sai sahu <span class="role-tag role-qa">QA</span></td><td class="num-cell">26</td><td class="num-cell">49</td></tr><tr><td class="name-cell">Dipti Roy <span class="role-tag role-sa">SA</span></td><td class="num-cell">21</td><td class="num-cell">44</td></tr><tr><td class="name-cell">Lorenzo Rodriguez <span class="role-tag role-sa">SA</span></td><td class="num-cell">12</td><td class="num-cell">24</td></tr><tr><td class="name-cell">Monica Chandran <span class="role-tag role-dev">DEV</span></td><td class="num-cell">10</td><td class="num-cell">13</td></tr></tbody>
+      </table>
+    </div>
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-name">PolicyCenter and Digital</span>
+        <span class="track-stats">55 tickets &middot; weight 161 &middot; 4 prod defects</span>
+      </div>
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">Shweta.Sharma1 <span class="role-tag role-ba">BA</span></td><td class="num-cell">33</td><td class="num-cell">103</td></tr><tr><td class="name-cell">Umair Hassan <span class="role-tag role-ba">BA</span></td><td class="num-cell">12</td><td class="num-cell">33</td></tr><tr><td class="name-cell">Sathya Ramamoorthy <span class="role-tag role-ba">BA</span></td><td class="num-cell">3</td><td class="num-cell">12</td></tr><tr><td class="name-cell">Hardik Jain <span class="role-tag role-ba">BA</span></td><td class="num-cell">4</td><td class="num-cell">7</td></tr><tr><td class="name-cell">Adam Riese <span class="role-tag role-ba">BA</span></td><td class="num-cell">3</td><td class="num-cell">6</td></tr></tbody>
+      </table>
+    </div>
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-name">Digital</span>
+        <span class="track-stats">80 tickets &middot; weight 139 &middot; 6 prod defects</span>
+      </div>
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">Senthil Kumar KV <span class="role-tag role-qa">QA</span></td><td class="num-cell">32</td><td class="num-cell">46</td></tr><tr><td class="name-cell">Ligi <span class="role-tag role-ba">BA</span></td><td class="num-cell">7</td><td class="num-cell">13</td></tr><tr><td class="name-cell">Josh Lisenba <span class="role-tag role-qa">QA</span></td><td class="num-cell">4</td><td class="num-cell">12</td></tr><tr><td class="name-cell">Keerthana Varatharaj <span class="role-tag role-qa">QA</span></td><td class="num-cell">4</td><td class="num-cell">12</td></tr><tr><td class="name-cell">Mahendra Pal Singh <span class="role-tag role-dev">DEV</span></td><td class="num-cell">4</td><td class="num-cell">10</td></tr></tbody>
+      </table>
+    </div>
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-name">PolicyCenter and BillingCenter</span>
+        <span class="track-stats">33 tickets &middot; weight 78 &middot; 7 prod defects</span>
+      </div>
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">upendran chandrababu <span class="role-tag role-ba">BA</span></td><td class="num-cell">13</td><td class="num-cell">29</td></tr><tr><td class="name-cell">Darshan.Shetty <span class="role-tag role-ba">BA</span></td><td class="num-cell">11</td><td class="num-cell">26</td></tr><tr><td class="name-cell">Umesh Jagtap <span class="role-tag role-ba">BA</span></td><td class="num-cell">7</td><td class="num-cell">15</td></tr><tr><td class="name-cell">Yuvraj Sambhaji <span class="role-tag role-dev">DEV</span></td><td class="num-cell">2</td><td class="num-cell">8</td></tr></tbody>
+      </table>
+    </div>
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-name">QAA</span>
+        <span class="track-stats">29 tickets &middot; weight 68</span>
+      </div>
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">Ragini Challagolla <span class="role-tag role-qaa">QAA</span></td><td class="num-cell">27</td><td class="num-cell">66</td></tr><tr><td class="name-cell">Abhilasha Yeshawanth <span class="role-tag role-qaa">QAA</span></td><td class="num-cell">2</td><td class="num-cell">2</td></tr></tbody>
+      </table>
+    </div>
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-name">Production Support</span>
+        <span class="track-stats">15 tickets &middot; weight 36 &middot; 15 prod defects</span>
+      </div>
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">Caelin Sheahan <span class="role-tag role-eng">ENG</span></td><td class="num-cell">7</td><td class="num-cell">19</td></tr><tr><td class="name-cell">Tyler Wengert <span class="role-tag role-eng">ENG</span></td><td class="num-cell">6</td><td class="num-cell">13</td></tr><tr><td class="name-cell">David Peyton <span class="role-tag role-eng">ENG</span></td><td class="num-cell">1</td><td class="num-cell">2</td></tr><tr><td class="name-cell">Prabhakar Nahak <span class="role-tag role-eng">ENG</span></td><td class="num-cell">1</td><td class="num-cell">2</td></tr></tbody>
+      </table>
+    </div>
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-name">GhostDraft</span>
+        <span class="track-stats">14 tickets &middot; weight 30 &middot; 2 prod defects</span>
+      </div>
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">Gulshan Bareja <span class="role-tag role-dev">DEV</span></td><td class="num-cell">14</td><td class="num-cell">30</td></tr></tbody>
+      </table>
+    </div>
+    </div>
+    <div class="panel-body" style="padding-top:0;">
+      <table>
+        <thead><tr><th>Smaller tracks</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td>GWMAIN/offshore Deployment Support</td><td class="num-cell">6</td><td class="num-cell">12</td></tr><tr><td>DATA</td><td class="num-cell">3</td><td class="num-cell">9</td></tr><tr><td>PolicyCenter and Integration</td><td class="num-cell">6</td><td class="num-cell">6</td></tr><tr><td>DATA Migration</td><td class="num-cell">1</td><td class="num-cell">4</td></tr><tr><td>TPM</td><td class="num-cell">1</td><td class="num-cell">2</td></tr><tr><td>Manual</td><td class="num-cell">2</td><td class="num-cell">2</td></tr><tr><td>NextJS</td><td class="num-cell">1</td><td class="num-cell">1</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel full">
+    <div class="panel-head"><h2>Critical Epics — the big initiatives (26)</h2><a class="view-all" href="https://bambooinsurance.atlassian.net/issues/?jql=project%20%3D%20GWMAIN%20AND%20statusCategory%20%21%3D%20Done%20AND%20fixVersion%20is%20not%20EMPTY%20AND%20issuetype%20%3D%20Epic%20AND%20priority%20%3D%20Critical%20ORDER%20BY%20key%20ASC" target="_blank" rel="noopener">open in Jira</a></div>
+    <div class="panel-body" style="padding:0 18px 4px;">
+      <table>
+        <thead><tr><th>Key</th><th>Summary</th><th>Status</th><th>Owner</th></tr></thead>
+        <tbody>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-10090" target="_blank" rel="noopener">GWMAIN-10090</a></td>
+          <td>MBR-03 Feature Request -Make Billing Contact required on the PC Payment screen to stop the &#x27;empty Billing Contacts / Payer Type&#x27; policy-change errors that back up the BC message queue </td>
+          <td><span class="status-pill">Dev</span></td>
+          <td>Ligi <span class="role-tag role-unk">BA</span></td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-11697" target="_blank" rel="noopener">GWMAIN-11697</a></td>
+          <td>MBR-06 PC - Updated Supplement Tax Charge Logic for Cancellations and Reinstatements </td>
+          <td><span class="status-pill">Dev</span></td>
+          <td>Sabrina Chapman </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-12246" target="_blank" rel="noopener">GWMAIN-12246</a></td>
+          <td>MBR-02 PC: Generate a new E-mail Message to InsVista at -30 days for mortgagee billed renewals coming up to their renewal date </td>
+          <td><span class="status-pill">Requirements</span></td>
+          <td>David Poplaski </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-12343" target="_blank" rel="noopener">GWMAIN-12343</a></td>
+          <td>MBR-02 GD: GW Production - Need to update language on the Notice of Cancellation for Non-Pay </td>
+          <td><span class="status-pill">Ready for Dev</span></td>
+          <td>David Poplaski </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-12676" target="_blank" rel="noopener">GWMAIN-12676</a></td>
+          <td>MBR-02 DIG: Pending Cancellations Tile (Part 2) - Grace Period </td>
+          <td><span class="status-pill">Requirements</span></td>
+          <td>David Poplaski </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-12804" target="_blank" rel="noopener">GWMAIN-12804</a></td>
+          <td>MBR-01 Feature Request - Default to check payment via One, Inc for Return Premiums that are held in draft status. </td>
+          <td><span class="status-pill">QA</span></td>
+          <td>Lori Brewer </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-14322" target="_blank" rel="noopener">GWMAIN-14322</a></td>
+          <td>Feature Request - Texas Non-Admitted: Modification to Territory Table </td>
+          <td><span class="status-pill">PO Review</span></td>
+          <td>Andrea Ward </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-15587" target="_blank" rel="noopener">GWMAIN-15587</a></td>
+          <td>MBR-05 Commission Reporting: Clean up Commission reporting display and validate logic </td>
+          <td><span class="status-pill">Dev</span></td>
+          <td>Chris Irvine </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-15600" target="_blank" rel="noopener">GWMAIN-15600</a></td>
+          <td>MBR-01 Feature Request - Update verbiage on automated RP email that was created on GWMAIN-9877 to remove the reference to the second triggered email </td>
+          <td><span class="status-pill">QA</span></td>
+          <td>Melissa Knighton </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-15759" target="_blank" rel="noopener">GWMAIN-15759</a></td>
+          <td>PC: Change Rate Book Logic in PC tying to Renewal Effective Date </td>
+          <td><span class="status-pill">Ready for Dev</span></td>
+          <td>John Dawdy </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-16952" target="_blank" rel="noopener">GWMAIN-16952</a></td>
+          <td>MBR-02 GD- New Renewal Reminder Form at  R-25 Days </td>
+          <td><span class="status-pill">Requirements</span></td>
+          <td>David Poplaski </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-17814" target="_blank" rel="noopener">GWMAIN-17814</a></td>
+          <td>MBR-02 BC: Establish a Grace Period for Renewals </td>
+          <td><span class="status-pill">Requirements</span></td>
+          <td>David Poplaski </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-17834" target="_blank" rel="noopener">GWMAIN-17834</a></td>
+          <td>MBR-02 PC: Establish a Grace Period for Renewals </td>
+          <td><span class="status-pill">Requirements</span></td>
+          <td>David Poplaski </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-18111" target="_blank" rel="noopener">GWMAIN-18111</a></td>
+          <td>MBR-04 - HH1 - PC/DIG: Default Billing Contact to PNI Mailing Address </td>
+          <td><span class="status-pill">Needs Feedback</span></td>
+          <td>Ashley Rinne </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-18471" target="_blank" rel="noopener">GWMAIN-18471</a></td>
+          <td>MBR-02 PC: Create new event for +45 day expiration document to be sent </td>
+          <td><span class="status-pill">Requirements</span></td>
+          <td>David Poplaski </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-18480" target="_blank" rel="noopener">GWMAIN-18480</a></td>
+          <td>MBR-02 BC: Create new event for +45-day expiration document to be sent </td>
+          <td><span class="status-pill">Requirements</span></td>
+          <td>David Poplaski </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-18790" target="_blank" rel="noopener">GWMAIN-18790</a></td>
+          <td>MBR-05 SOP for Commission Plan Rate Changes </td>
+          <td><span class="status-pill">Dev</span></td>
+          <td>Chris Irvine </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-18795" target="_blank" rel="noopener">GWMAIN-18795</a></td>
+          <td>MBR-05 SOP for Broker of Record (BOR) changes </td>
+          <td><span class="status-pill">Dev</span></td>
+          <td>Chris Irvine </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-18803" target="_blank" rel="noopener">GWMAIN-18803</a></td>
+          <td>Feature Request - Commission Change:  Create 14/12 CA Admitted Plan and Assign Agencies </td>
+          <td><span class="status-pill">QA</span></td>
+          <td>Unassigned </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-18908" target="_blank" rel="noopener">GWMAIN-18908</a></td>
+          <td>Feature Request - Update Assigned Commission Plans for Agencies </td>
+          <td><span class="status-pill">QA</span></td>
+          <td>Chris Irvine </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-19706" target="_blank" rel="noopener">GWMAIN-19706</a></td>
+          <td>MBR-04 PC: Pass Policy Address to Billing Center </td>
+          <td><span class="status-pill">Refinement</span></td>
+          <td>Eldo Zacharia <span class="role-tag role-unk">DEV</span></td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-19922" target="_blank" rel="noopener">GWMAIN-19922</a></td>
+          <td>New PC Batch to merge contacts sharing the same addressBookUID </td>
+          <td><span class="status-pill">QA</span></td>
+          <td>Maher Jellali <span class="role-tag role-unk">DEV</span></td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-6495" target="_blank" rel="noopener">GWMAIN-6495</a></td>
+          <td>MBR-06 Change rating tables that are not Effective Dated </td>
+          <td><span class="status-pill">Needs Feedback</span></td>
+          <td>John Dawdy </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-9016" target="_blank" rel="noopener">GWMAIN-9016</a></td>
+          <td>Feature Request - Remove the ability for an agent to click the &#x27;Void E-Signature&#x27; button multiple times </td>
+          <td><span class="status-pill">Dev</span></td>
+          <td>Unassigned </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-9073" target="_blank" rel="noopener">GWMAIN-9073</a></td>
+          <td>MBR-06 Minimum Total Premium Structure </td>
+          <td><span class="status-pill">Refinement</span></td>
+          <td>Sabrina Chapman </td>
+        </tr>
+        <tr>
+          <td class="key-cell"><a href="https://bambooinsurance.atlassian.net/browse/GWMAIN-9559" target="_blank" rel="noopener">GWMAIN-9559</a></td>
+          <td>MBR-06 BC: Cancel fee should not be charged for flat cancelled policies </td>
+          <td><span class="status-pill">Refinement</span></td>
+          <td>John Dawdy </td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div style="height:16px;"></div>
+  </section>
+
+  <section class="panel full">
+    <div class="panel-head"><h2>Not on the scrum roster (68 tickets, 23 people)</h2><span class="view-all">business stakeholders, POs, leads not in team roster</span></div>
+    <div class="panel-body" style="padding:0 18px 4px;">
+      <table>
+        <thead><tr><th>Person</th><th style="text-align:right;">Tickets</th><th style="text-align:right;">Weight</th></tr></thead>
+        <tbody><tr><td class="name-cell">David Poplaski</td><td class="num-cell">14</td><td class="num-cell">42</td></tr><tr><td class="name-cell">Jessica Unik</td><td class="num-cell">7</td><td class="num-cell">12</td></tr><tr><td class="name-cell">Chris Irvine</td><td class="num-cell">6</td><td class="num-cell">20</td></tr><tr><td class="name-cell">Melissa Knighton</td><td class="num-cell">6</td><td class="num-cell">13</td></tr><tr><td class="name-cell">Terry Dickson</td><td class="num-cell">6</td><td class="num-cell">18</td></tr><tr><td class="name-cell">John Dawdy</td><td class="num-cell">4</td><td class="num-cell">14</td></tr><tr><td class="name-cell">Frederick Au</td><td class="num-cell">3</td><td class="num-cell">6</td></tr><tr><td class="name-cell">Sabrina Chapman</td><td class="num-cell">2</td><td class="num-cell">8</td></tr><tr><td class="name-cell">Lori Brewer</td><td class="num-cell">2</td><td class="num-cell">6</td></tr><tr><td class="name-cell">Andrea Ward</td><td class="num-cell">2</td><td class="num-cell">6</td></tr><tr><td class="name-cell">Audwin</td><td class="num-cell">2</td><td class="num-cell">6</td></tr><tr><td class="name-cell">Alex Williamson</td><td class="num-cell">2</td><td class="num-cell">4</td></tr><tr><td class="name-cell">Ashley Phillips</td><td class="num-cell">2</td><td class="num-cell">2</td></tr><tr><td class="name-cell">Remigious Anto Victor Raj</td><td class="num-cell">1</td><td class="num-cell">4</td></tr><tr><td class="name-cell">Ashley Rinne</td><td class="num-cell">1</td><td class="num-cell">4</td></tr></tbody>
+      </table>
+    </div>
+    <p class="small-note">These are largely epic owners / product stakeholders (e.g. David Poplaski on MBR-02) rather than scrum-team delivery staff, so their absence from the roster is expected.</p>
+  </section>
+
+  <footer class="board-foot">
+    Built from a live Jira query (<code>project = GWMAIN AND statusCategory != Done AND fixVersion is not EMPTY</code>) run Sept 17, 2026 — 836 tickets. Tracks and roles come from the <a href="https://bambooinsurance.atlassian.net/wiki/spaces/GWExternal/pages/3306684425/2026+Scrum+Teams" target="_blank" rel="noopener">2026 Scrum Teams</a> roster; "weight" is a priority-based proxy for effort, not logged time.
+  </footer>
+
+</div>
+</body>
+</html>
